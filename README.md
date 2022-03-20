@@ -2,6 +2,8 @@
 
 ## About
 
+MTA Forums topic: [Link](https://forum.mtasa.com/topic/134836-rel-nandocrypt-file-encryption-resource/)
+
 This MTA resource lets you encrypt any files using a secret key (string) that is stored inside a script that it generates & compiles. You use the script it creates to decrypt the files in your own resource(s).
 
 It uses `aes128` ([Advanced Encryption Standard](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) in CTR mode) with 16 characters long keys.

@@ -2,6 +2,10 @@ local thisRes = getThisResource()
 local thisResName = getResourceName(thisRes)
 local scriptVersion
 
+local FN_DECRYPTER_SCRIPT = "nando_decrypter"
+local FN_DECRYPTER_KEYS = "nando_decrypter_keys.json"
+local FN_ENCRYPT_LOGS = "nando_encrypt.log"
+
 local ENCRYPTED_EXT = ".nandocrypt"
 
 -- Extra security to hide the secret key from people who can access server files
@@ -45,20 +49,9 @@ function compileCallback(responseData, responseError, fn, player)
 	end
 end
 
-function clearDecrypterKeys(thePlayer, cmd)
-	local kfn = "nando_decrypter_keys"
-	if fileExists(kfn) then
-		fileDelete(kfn)
-		outputChatBox(kfn.." deleted.", thePlayer, 0,255,0)
-	else
-		outputChatBox(kfn.." already deleted.", thePlayer, 255,194,14)
-	end
-end
-addCommandHandler("nclearkeys", clearDecrypterKeys, false, false)
-
-function createDecrypter(secretKey, iv, encodedContent, player)
+function createDecrypter(secretKey, iv, fpath, encodedContentHash, player)
 	local ivList = {}
-	local kfn = "nando_decrypter_keys"
+	local kfn = FN_DECRYPTER_KEYS
 	local kf
 	local opened = false
 	if fileExists(kfn) then
@@ -70,14 +63,13 @@ function createDecrypter(secretKey, iv, encodedContent, player)
 	end
 	if opened then
 		local kfJson = fileRead(kf, fileGetSize(kf))
+		fileClose(kf)
 		if not kfJson then
-			fileClose(kf)
 			return outputChatBox("Failed to read: "..kfn, player, 255,25,25)
 		end
 		if kfJson ~= "" then
 			ivList = fromJSON(kfJson)
 		end
-		fileClose(kf)
 		
 		if not ivList then
 			iprint(kfJson)
@@ -92,15 +84,14 @@ function createDecrypter(secretKey, iv, encodedContent, player)
 	end
 
 	local iv64 = base64Encode(iv)
-	local encodedContentHash = md5(encodedContent)
 	ivList[encodedContentHash] = iv64
 
-	iprint("ivList", ivList)
+	-- iprint("ivList", ivList)
 
 	fileWrite(kf, toJSON(ivList))
 	fileClose(kf)
 
-	local fn = "nando_decrypter"
+	local fn = FN_DECRYPTER_SCRIPT
 	local f
 	if fileExists(fn) then
 		fileDelete(fn)
@@ -142,6 +133,11 @@ end
 
 	fileWrite(f, content)
 	fileClose(f)
+
+
+	addEncryptLog(
+		"Encrypted file '"..fpath.."' and obtained hash '"..encodedContentHash.."'. Corresponding IV stored in '"..kfn.."'."
+	)
 
 	-- Skip compilation:
 	if (not COMPILE_DERCRYPTER) then
@@ -185,7 +181,33 @@ function encryptFile(fpath, secretKey, player)
 
 	outputChatBox("Encrypted '"..fpath.."' into '"..efnn.."'", player, 25,255,25)
 
-	createDecrypter(secretKey, iv, encoded, player)
+	createDecrypter(secretKey, iv, fpath, md5(encoded), player)
+end
+
+function addEncryptLog(msg)
+	local lfn = FN_ENCRYPT_LOGS
+	local lf
+	if fileExists(lfn) then
+		lf = fileOpen(lfn)
+	else
+		lf = fileCreate(lfn)
+	end
+	if not lf then
+		outputDebugString("Failed to create/open file: "..lfn, 0, 255,25,25)
+		return false
+	end
+	local lfc = fileRead(lf, fileGetSize(lf))
+	if not lfc then
+		outputDebugString("Failed to read file: "..lfn, 0, 255,25,25)
+		return false
+	end
+
+	local time = getRealTime()
+	local stamp = "[" ..string.format("%02d:%02d:%02d", time.hour, time.minute, time.second).." "..string.format("%04d-%02d-%02d", time.year+1900, time.month+1, time.monthday).."] "
+
+	fileWrite(lf, stamp .. msg.. "\n")
+	fileClose(lf)
+	return true
 end
 
 
@@ -200,13 +222,14 @@ function requestDecryptFile(filePath)
 	if type(ncDecrypt) ~= "function" then
 		return outputChatBox("Decrypt function not loaded", thePlayer, 255,0,0)
 	end
+	filePath = filePath..ENCRYPTED_EXT
 	local worked, reason = ncDecrypt(filePath,
 		function(data)
 			outputChatBox("Decryption of '"..filePath.."' worked", thePlayer, 225,255,0)
 		end
 	)
 	if not worked then
-		return outputChatBox("Decrypt function failed: "..tostring(reason), thePlayer, 255,0,0)
+		return outputChatBox("Decrypt of '"..filePath.."' failed: "..tostring(reason), thePlayer, 255,0,0)
 	end
 end
 addEvent(thisResName..":requestDecryptFile", true)

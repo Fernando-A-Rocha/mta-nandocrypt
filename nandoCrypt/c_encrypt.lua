@@ -142,7 +142,7 @@ function openChangeKeyMenu()
 			closeChangeKeyMenu()
 
 		elseif source == random then
-			guiSetText(key_edit, genRandomString(32))
+			guiSetText(key_edit, genRandomString(math.random(32, 64)))
 		
 		elseif source == setkey then
 			local key = guiGetText(key_edit)

@@ -2,6 +2,19 @@
 
 ![1](.github/1.png)
 
+## Pros & Cons of this system
+
+### Pros
+
+1. Makes no calls to the server for decrypting the files clientside.
+2. Decrypter script is compiled using MTA's Luac, you can't uncompile it.
+3. Decrypter script is not sent to the client's cache, so you can only steal it if you have access to the server's files. But even if you obtain it, see point number 3.
+4. It would take many years to test all possible secret key combinations to decrypt any files encrypted with this resource. Minimum length for the key is 32 characters, and it can be a random amount above that.
+
+### Cons
+
+1. Decrypting files clientside likely impacts script performance a bit, but it's the price to pay.
+
 ## Setup
 
 1. Create empty file named `nando_decrypter` inside [nandoCrypt](/nandoCrypt)

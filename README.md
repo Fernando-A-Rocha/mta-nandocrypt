@@ -49,4 +49,4 @@ Keep `nando_decrypter_keys.json` in the nandoCrypt resource because it is used b
 
 ## Acknowledgements
 
-- [Patrick](https://forum.mtasa.com/profile/43688-patrick/) - Creator of [pCrypt](https://mtaclub.eu/pcrypt) (main inspiration for this project)
+- [Patrick](https://forum.mtasa.com/profile/43688-patrick/) - Creator of [pCrypt](https://mtaclub.eu/pcrypt) - main inspiration for this project & helped me resolve some issues!

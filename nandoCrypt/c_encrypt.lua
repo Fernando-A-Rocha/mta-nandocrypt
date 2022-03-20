@@ -6,7 +6,7 @@ local window, window2
 
 local savedFileName, secretKey
 
-function openMenu()
+function openMenu(version)
 	closeMenu()
 
 	guiSetInputMode("no_binds_when_editing")
@@ -30,7 +30,7 @@ function openMenu()
 	end
 
 	local WW, WH = 500, 205
-	window = guiCreateWindow(SW/2 - WW/2, SH/2 - WH/2, WW, WH, "Encrypt Panel", false)
+	window = guiCreateWindow(SW/2 - WW/2, SH/2 - WH/2, WW, WH, "NandoCrypt ("..version..")", false)
 
 	local close = guiCreateButton(10, WH-40, WW-20, 30, "Close", false, window)
 
@@ -43,7 +43,7 @@ function openMenu()
 		guiSetProperty(setkey, "NormalTextColour", "FF00FF00")
 	end
 
-	local decrypt = guiCreateButton(10, WH-110, WW-20, 30, "Decrypt File (TEST)", false, window)
+	local decrypt = guiCreateButton(10, WH-110, WW-20, 30, "Decrypt File (Test)", false, window)
 	if (secretKey ~= nil) then
 		guiSetProperty(decrypt, "NormalTextColour", "ff6373ff")
 	else

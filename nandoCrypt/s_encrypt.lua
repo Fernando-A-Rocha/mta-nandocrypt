@@ -1,5 +1,6 @@
 local thisRes = getThisResource()
 local thisResName = getResourceName(thisRes)
+local scriptVersion
 
 local ENCRYPTED_EXT = ".nandocrypt"
 
@@ -115,7 +116,7 @@ end
 function requestMenu(thePlayer, cmd)
 	-- permission checks here
 
-	triggerClientEvent(thePlayer, thisResName..":openMenu", resourceRoot)
+	triggerClientEvent(thePlayer, thisResName..":openMenu", resourceRoot, scriptVersion)
 end
 addCommandHandler("NandoCrypt", requestMenu, false, false)
 
@@ -145,4 +146,7 @@ addEventHandler(thisResName..":requestEncryptFile", resourceRoot, requestEncrypt
 addEventHandler( "onResourceStart", resourceRoot, 
 function (startedResource)
 	math.randomseed(os.time())
+
+	local ver = getResourceInfo(startedResource, "version")
+	scriptVersion = ((ver and "v"..ver) or "Unknown Version")
 end)

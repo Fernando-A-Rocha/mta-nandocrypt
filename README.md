@@ -1,5 +1,7 @@
 # MTA NandoCrypt
 
+![1](.github/1.png)
+
 ## Setup
 
 1. Create empty file named `nando_decrypter`

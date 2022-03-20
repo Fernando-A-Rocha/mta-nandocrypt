@@ -1,0 +1,11 @@
+<meta>
+    <script src="nando_decrypter" type="client" cache="false" />
+    <script src="c_replace.lua" type="client" cache="false" />
+    
+    <!-- MODS LIST -->
+    <file src="mods/elegant.dff.nandocrypt" />
+    <file src="mods/elegant.txd.nandocrypt" />
+
+    <!-- required because of 'nando_decryptor' which is used clientside here -->
+    <min_mta_version client="1.5.6-9.18728"></min_mta_version>
+</meta>

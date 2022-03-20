@@ -4,7 +4,7 @@
 
 ## Setup
 
-1. Create empty file named `nando_decrypter`
+1. Create empty file named `nando_decrypter` inside [nandoCrypt](/nandoCrypt)
 2. Use `start nandoCrypt` to initiate the resource
 3. Use `/nandoCrypt` to open the panel
 
@@ -20,4 +20,4 @@ A new file will be created using the prefix defined.
 Enter the file name without the custom extension and it will try to decrypt it using the decrypter file generated (*which can be used both clientside and serverside*).
 
 4. Copy the decrypter file generated to your own unique resource and use it to handle encrypted files in your own way.
-Check `nandoCrypt-example` to understand how this can be achieved.
+Check [nandoCrypt-example](/nandoCrypt-example) to understand how this can be achieved.

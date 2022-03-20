@@ -45,7 +45,18 @@ function compileCallback(responseData, responseError, fn, player)
 	end
 end
 
-function createDecrypter(secretKey, iv, fileContentHash, player)
+function clearDecrypterKeys(thePlayer, cmd)
+	local kfn = "nando_decrypter_keys"
+	if fileExists(kfn) then
+		fileDelete(kfn)
+		outputChatBox(kfn.." deleted.", thePlayer, 0,255,0)
+	else
+		outputChatBox(kfn.." already deleted.", thePlayer, 255,194,14)
+	end
+end
+addCommandHandler("nclearkeys", clearDecrypterKeys, false, false)
+
+function createDecrypter(secretKey, iv, encodedContent, player)
 	local ivList = {}
 	local kfn = "nando_decrypter_keys"
 	local kf
@@ -81,7 +92,8 @@ function createDecrypter(secretKey, iv, fileContentHash, player)
 	end
 
 	local iv64 = base64Encode(iv)
-	ivList[fileContentHash] = iv64
+	local encodedContentHash = md5(encodedContent)
+	ivList[encodedContentHash] = iv64
 
 	iprint("ivList", ivList)
 
@@ -173,7 +185,7 @@ function encryptFile(fpath, secretKey, player)
 
 	outputChatBox("Encrypted '"..fpath.."' into '"..efnn.."'", player, 25,255,25)
 
-	createDecrypter(secretKey, iv, md5(fileContent), player)
+	createDecrypter(secretKey, iv, encoded, player)
 end
 
 

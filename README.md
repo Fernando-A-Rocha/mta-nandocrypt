@@ -2,7 +2,9 @@
 
 ## About
 
-MTA Forums topic: [Link](https://forum.mtasa.com/topic/134836-rel-nandocrypt-file-encryption-resource/) Star ⭐ this repository if you like it!
+MTA Forums topic: [Link](https://forum.mtasa.com/topic/134836-rel-nandocrypt-file-encryption-resource/)
+
+Star ⭐ this repository if you like it!
 
 Contact: Nando#7736 (Discord)
 
@@ -22,7 +24,7 @@ It uses `aes128` ([Advanced Encryption Standard](https://en.wikipedia.org/wiki/A
 
 ### Cons
 
-1. Decrypting files clientside likely impacts script performance a bit, but it's the price to pay.
+1. Decrypting files clientside likely impacts script performance a bit, but it's the price to pay. However, Aes128 is the fastest encryption method available natively in MTA, so you should get very satisfying results.
 
 ## Setup
 

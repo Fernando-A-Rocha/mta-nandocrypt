@@ -1,11 +1,11 @@
 # MTA NandoCrypt
 
-## Description
+## About
+
+This MTA resource lets you encrypt any files using a secret key (string) that is stored inside a script that it generates & compiles. You use the script it creates to decrypt the files in your own resource(s).
 
 ![1](.github/1.png)
 ![2](.github/2.png)
-
-This MTA resource lets you encrypt any files using a secret key (string) that is stored inside a script that it generates & compiles. You use the script it creates to decrypt the files in your own resource(s).
 
 ### Pros
 

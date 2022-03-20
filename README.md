@@ -4,6 +4,8 @@
 
 This MTA resource lets you encrypt any files using a secret key (string) that is stored inside a script that it generates & compiles. You use the script it creates to decrypt the files in your own resource(s).
 
+It uses `aes128` ([Advanced Encryption Standard](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) in CTR mode) with 16 characters long keys.
+
 ![1](.github/1.png)
 ![2](.github/2.png)
 
@@ -12,7 +14,7 @@ This MTA resource lets you encrypt any files using a secret key (string) that is
 1. Makes no calls to the server for decrypting the files clientside.
 2. Decrypter script is compiled using [MTA's Luac](https://forum.mtasa.com/topic/67224-luacmtasacom-and-us/), you can't uncompile it.
 3. Decrypter script is not sent to the client's cache, so you can only steal it if you have access to the server's files. But even if you obtain it, see point number 3.
-4. It would take many years to test all possible secret key combinations to decrypt any files encrypted with this resource. Minimum length for the key is 32 characters, and it can be a random amount above that.
+4. It would take many years to test all possible secret key combinations to decrypt any files encrypted with this resource.
 
 ### Cons
 

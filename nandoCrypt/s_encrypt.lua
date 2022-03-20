@@ -42,7 +42,7 @@ function compileCallback(responseData, responseError, fn, player)
 	end
 end
 
-function createDecrypter(secretKey, player)
+function createDecrypter(secretKey, iv, player)
 	local fn = "nando_decrypter"
 	local f
 	if fileExists(fn) then
@@ -52,23 +52,27 @@ function createDecrypter(secretKey, player)
 	if not f then
 		return outputChatBox("Failed to open: "..fn, player, 255,25,25)
 	end
-
 	local content = string.format(
 [[-- Created by Nando
 -- This decrypts a file (given path) using a secret key
--- which is stored in this Luac protected file.
+-- which is stored in this cached & Luac protected file.
 function ncDecrypt(file, callbackFunc)
-	if type(file) ~= "string" then return false end
-	if type(callbackFunc) ~= "function" then return false end
-	if not fileExists(file) then return false end
-	local f = fileOpen(file)
-	if not f then return false end
-	local content = fileRead(f, fileGetSize(f))
-	fileClose(f)
-	if (not content) or (content == "") then return false end
-	return decodeString("tea", content, { key = '%s' }, callbackFunc)
+if type(file) ~= "string" then return false, "File path not string" end
+if type(callbackFunc) ~= "function" then return false, "Callback function invalid" end
+if not fileExists(file) then return false, "File doesn't exist" end
+local f = fileOpen(file)
+if not f then return false, "Failed to open file" end
+local fsize = fileGetSize(f)
+if not fsize then
+fileClose(f)
+return false, "Failed to get file size"
 end
-]], secretKey)
+local content = fileRead(f, fsize)
+fileClose(f)
+if (not content) or (content == "") then return false, "Failed to read file content or empty" end
+return decodeString("aes128", content, { key = base64Decode('%s'), iv = base64Decode('%s') }, callbackFunc)
+end
+]], base64Encode(secretKey), base64Encode(iv))
 
 	fileWrite(f, content)
 	fileClose(f)
@@ -78,7 +82,7 @@ end
 	fetchRemote("https://luac.mtasa.com/?compile=1&debug=0&obfuscate=3", compileCallback, content, true, fn, player)
 end
 
-function encryptFile(fpath, secretKey, lastUsedSecretKey, player)
+function encryptFile(fpath, secretKey, player)
 
 	if not fileExists(fpath) then
 		return outputChatBox("File doesn't exist: "..fpath, player, 255,25,25)
@@ -92,7 +96,8 @@ function encryptFile(fpath, secretKey, lastUsedSecretKey, player)
 	if (not fileContent) or (fileContent == "") then
 		return outputChatBox("Failed to read or file is empty: "..fpath, player, 255,25,25)
 	end
-	local encoded = encodeString("tea", fileContent, { key = secretKey })
+	local encoded, iv = encodeString("aes128", fileContent, { key = secretKey })
+	-- iv depends on data encrypted
 	if not encoded then
 		return outputChatBox("Encoding algorithm failed", player, 255,25,25)
 	end
@@ -107,9 +112,7 @@ function encryptFile(fpath, secretKey, lastUsedSecretKey, player)
 
 	outputChatBox("Encrypted '"..fpath.."' into '"..efnn.."'", player, 25,255,25)
 
-	if (lastUsedSecretKey == nil) or (lastUsedSecretKey ~= secretKey) then
-		createDecrypter(secretKey, player)
-	end
+	createDecrypter(secretKey, iv, player)
 end
 
 
@@ -124,20 +127,20 @@ function requestDecryptFile(filePath)
 	if type(ncDecrypt) ~= "function" then
 		return outputChatBox("Decrypt function not loaded", thePlayer, 255,0,0)
 	end
-	local result = ncDecrypt(filePath,
+	local worked, reason = ncDecrypt(filePath,
 		function(data)
 			outputChatBox("Decryption of '"..filePath.."' worked", thePlayer, 225,255,0)
 		end
 	)
-	if not result then
-		return outputChatBox("Decrypt function returned: "..tostring(result), thePlayer, 255,0,0)
+	if not worked then
+		return outputChatBox("Decrypt function failed: "..tostring(reason), thePlayer, 255,0,0)
 	end
 end
 addEvent(thisResName..":requestDecryptFile", true)
 addEventHandler(thisResName..":requestDecryptFile", resourceRoot, requestDecryptFile)
 
-function requestEncryptFile(filePath, secretKey, lastUsedSecretKey)
-	encryptFile(filePath, secretKey, lastUsedSecretKey, client)
+function requestEncryptFile(filePath, secretKey)
+	encryptFile(filePath, secretKey, client)
 end
 addEvent(thisResName..":requestEncryptFile", true)
 addEventHandler(thisResName..":requestEncryptFile", resourceRoot, requestEncryptFile)

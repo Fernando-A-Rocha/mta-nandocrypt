@@ -89,7 +89,7 @@ function openMenu(version)
 			closeMenu()
 
 			if source == encrypt then
-				triggerServerEvent(thisResName..":requestEncryptFile", resourceRoot, filePath, secretKey, getElementData(localPlayer, thisResName..":lastUsedSecretKey") or nil)
+				triggerServerEvent(thisResName..":requestEncryptFile", resourceRoot, filePath, secretKey)
 				setElementData(localPlayer, thisResName..":lastUsedSecretKey", secretKey, false)
 			elseif source == decrypt then
 				triggerServerEvent(thisResName..":requestDecryptFile", resourceRoot, filePath)
@@ -142,15 +142,15 @@ function openChangeKeyMenu()
 			closeChangeKeyMenu()
 
 		elseif source == random then
-			guiSetText(key_edit, genRandomString(math.random(32, 64)))
+			guiSetText(key_edit, genRandomKey())
 		
 		elseif source == setkey then
 			local key = guiGetText(key_edit)
 			if key == "" then
 				return outputChatBox("You need to enter a valid secret key (min 32 characters) or click randomize.", 255,25,25)
 			end
-			if string.len(key) < 32 then
-				return outputChatBox("Key must be at least 32 characters long. Click randomize to generate one automatically.", 255,25,25)
+			if string.len(key) ~= 16 then
+				return outputChatBox("Key must be 16 characters long. Click randomize to generate one automatically.", 255,25,25)
 			end
 			secretKey = key
 			setClipboard(secretKey)
@@ -171,10 +171,10 @@ function closeChangeKeyMenu()
 	end
 end
 
-function genRandomString(length)
+function genRandomKey()
 	local rstring = ""
-	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	for i = 1, length do
+	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+	for i = 1, 16 do
 		local rand = math.random(#chars)
 		rstring = rstring .. chars:sub(rand, rand)
 	end

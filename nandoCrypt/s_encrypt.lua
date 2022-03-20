@@ -49,7 +49,28 @@ function compileCallback(responseData, responseError, fn, player)
 	end
 end
 
-function createDecrypter(secretKey, iv, fpath, encodedContentHash, player)
+function encryptFile(fpath, secretKey, player)
+
+	if not fileExists(fpath) then
+		return outputChatBox("File doesn't exist: "..fpath, player, 255,25,25)
+	end
+	local ef = fileOpen(fpath)
+	if not ef then
+		return outputChatBox("Failed to open: "..fpath, player, 255,25,25)
+	end
+	local fileContent = fileRead(ef, fileGetSize(ef))
+	fileClose(ef)
+	if (not fileContent) or (fileContent == "") then
+		return outputChatBox("Failed to read or file is empty: "..fpath, player, 255,25,25)
+	end
+
+	local encoded, iv = encodeString("aes128", fileContent, { key = secretKey })
+	-- iv depends on data encrypted
+	if not encoded then
+		return outputChatBox("Encoding algorithm failed", player, 255,25,25)
+	end
+	local encodedContentHash = md5(encoded)
+
 	local ivList = {}
 	local kfn = FN_DECRYPTER_KEYS
 	local kf
@@ -77,16 +98,42 @@ function createDecrypter(secretKey, iv, fpath, encodedContentHash, player)
 		end
 		fileDelete(kfn)
 	end
-
 	local kf = fileCreate(kfn)
 	if not kf then
 		return outputChatBox("Failed to create: "..kfn, player, 255,25,25)
 	end
 
+	local efnn = fpath..ENCRYPTED_EXT
+	if fileExists(efnn) then
+		local efn = fileOpen(efnn)
+		if not efn then
+			return outputChatBox("Failed to open: "..efnn, player, 255,25,25)
+		end
+		-- delete old useless hash
+		local efnContent = fileRead(efn, fileGetSize(efn))
+		fileClose(efn)
+		if not efnContent then
+			return outputChatBox("Failed to read: "..efnn, player, 255,25,25)
+		end
+		local encodedContentHash_old = md5(efnContent)
+		if ivList[encodedContentHash_old] then
+			ivList[encodedContentHash_old] = nil
+			outputChatBox("Deleting old hash '"..encodedContentHash_old.."' from stored keys", player, 255,126,0)
+		end
+		fileDelete(efnn)
+	end
+	local efn = fileCreate(efnn)
+	if not efn then
+		return outputChatBox("Failed to open: "..efnn, player, 255,25,25)
+	end
+	fileWrite(efn, encoded)
+	fileClose(efn)
+
+	outputChatBox("Encrypted '"..fpath.."' into '"..efnn.."'", player, 25,255,25)
+
+
 	local iv64 = base64Encode(iv)
 	ivList[encodedContentHash] = iv64
-
-	-- iprint("ivList", ivList)
 
 	fileWrite(kf, toJSON(ivList))
 	fileClose(kf)
@@ -149,39 +196,6 @@ end
 		outputChatBox("Created '"..fn.."', compiling..", player, 25,255,25)
 		fetchRemote("https://luac.mtasa.com/?compile=1&debug=0&obfuscate=3", compileCallback, content, true, fn, player)
 	end
-end
-
-function encryptFile(fpath, secretKey, player)
-
-	if not fileExists(fpath) then
-		return outputChatBox("File doesn't exist: "..fpath, player, 255,25,25)
-	end
-	local ef = fileOpen(fpath)
-	if not ef then
-		return outputChatBox("Failed to open: "..fpath, player, 255,25,25)
-	end
-	local fileContent = fileRead(ef, fileGetSize(ef))
-	fileClose(ef)
-	if (not fileContent) or (fileContent == "") then
-		return outputChatBox("Failed to read or file is empty: "..fpath, player, 255,25,25)
-	end
-	local encoded, iv = encodeString("aes128", fileContent, { key = secretKey })
-	-- iv depends on data encrypted
-	if not encoded then
-		return outputChatBox("Encoding algorithm failed", player, 255,25,25)
-	end
-	local efnn = fpath..ENCRYPTED_EXT
-	if fileExists(efnn) then fileDelete(efnn) end
-	local efn = fileCreate(efnn)
-	if not efn then
-		return outputChatBox("Failed to open: "..efnn, player, 255,25,25)
-	end
-	fileWrite(efn, encoded)
-	fileClose(efn)
-
-	outputChatBox("Encrypted '"..fpath.."' into '"..efnn.."'", player, 25,255,25)
-
-	createDecrypter(secretKey, iv, fpath, md5(encoded), player)
 end
 
 function addEncryptLog(msg)

@@ -4,6 +4,9 @@ local scriptVersion
 
 local ENCRYPTED_EXT = ".nandocrypt"
 
+-- Extra security to hide the secret key from people who can access server files
+local COMPILE_DERCRYPTER = true
+
 function compileCallback(responseData, responseError, fn, player)
 
 	local errorCodes = {
@@ -42,7 +45,49 @@ function compileCallback(responseData, responseError, fn, player)
 	end
 end
 
-function createDecrypter(secretKey, iv, player)
+function createDecrypter(secretKey, iv, fileContentHash, player)
+	local ivList = {}
+	local kfn = "nando_decrypter_keys"
+	local kf
+	local opened = false
+	if fileExists(kfn) then
+		opened = true
+		kf = fileOpen(kfn)
+		if not kf then
+			return outputChatBox("Failed to open: "..kfn, player, 255,25,25)
+		end
+	end
+	if opened then
+		local kfJson = fileRead(kf, fileGetSize(kf))
+		if not kfJson then
+			fileClose(kf)
+			return outputChatBox("Failed to read: "..kfn, player, 255,25,25)
+		end
+		if kfJson ~= "" then
+			ivList = fromJSON(kfJson)
+		end
+		fileClose(kf)
+		
+		if not ivList then
+			iprint(kfJson)
+			return outputChatBox("Failed to read IV keys from: "..kfn, player, 255,25,25)
+		end
+		fileDelete(kfn)
+	end
+
+	local kf = fileCreate(kfn)
+	if not kf then
+		return outputChatBox("Failed to create: "..kfn, player, 255,25,25)
+	end
+
+	local iv64 = base64Encode(iv)
+	ivList[fileContentHash] = iv64
+
+	iprint("ivList", ivList)
+
+	fileWrite(kf, toJSON(ivList))
+	fileClose(kf)
+
 	local fn = "nando_decrypter"
 	local f
 	if fileExists(fn) then
@@ -52,6 +97,7 @@ function createDecrypter(secretKey, iv, player)
 	if not f then
 		return outputChatBox("Failed to open: "..fn, player, 255,25,25)
 	end
+	
 	local content = string.format(
 [[-- Created by Nando
 -- This decrypts a file (given path) using a secret key
@@ -70,16 +116,31 @@ end
 local content = fileRead(f, fsize)
 fileClose(f)
 if (not content) or (content == "") then return false, "Failed to read file content or empty" end
-return decodeString("aes128", content, { key = base64Decode('%s'), iv = base64Decode('%s') }, callbackFunc)
+local ivList = fromJSON('%s')
+local contentHash = md5(content)
+local theIV = ivList[contentHash]
+if not theIV then
+print(contentHash)
+iprint(ivList)
+return false, "Missing IV key for file content base64"
 end
-]], base64Encode(secretKey), base64Encode(iv))
+return decodeString("aes128", content, { key = base64Decode('%s'), iv = base64Decode(theIV) }, callbackFunc)
+end
+]], toJSON(ivList), base64Encode(secretKey))
 
 	fileWrite(f, content)
 	fileClose(f)
 
-	outputChatBox("Created '"..fn.."', compiling..", player, 25,255,25)
+	-- Skip compilation:
+	if (not COMPILE_DERCRYPTER) then
+		outputChatBox("Created '"..fn.."'", player, 25,255,25)
+		outputChatBox("Restarting "..thisResName.." resource..", player, 187,187,187)
+		restartResource(thisRes)
 
-	fetchRemote("https://luac.mtasa.com/?compile=1&debug=0&obfuscate=3", compileCallback, content, true, fn, player)
+	else
+		outputChatBox("Created '"..fn.."', compiling..", player, 25,255,25)
+		fetchRemote("https://luac.mtasa.com/?compile=1&debug=0&obfuscate=3", compileCallback, content, true, fn, player)
+	end
 end
 
 function encryptFile(fpath, secretKey, player)
@@ -112,7 +173,7 @@ function encryptFile(fpath, secretKey, player)
 
 	outputChatBox("Encrypted '"..fpath.."' into '"..efnn.."'", player, 25,255,25)
 
-	createDecrypter(secretKey, iv, player)
+	createDecrypter(secretKey, iv, md5(fileContent), player)
 end
 
 

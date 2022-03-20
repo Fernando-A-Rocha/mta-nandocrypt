@@ -38,6 +38,10 @@ Enter the file name without the custom extension and it will try to decrypt it u
 4. Copy the decrypter file generated to your own unique resource and use it to handle encrypted files in your own way.
 Check [nandoCrypt-example](/nandoCrypt-example) to understand how this can be achieved.
 
+## Advice
+
+- If working on a project with multiple people or a shared repository, don't share the secret key used to encrypt the models.
+
 ## Acknowledgements
 
 - [Patrick](https://forum.mtasa.com/profile/43688-patrick/) - Creator of [pCrypt](https://mtaclub.eu/pcrypt) (main inspiration for this project)

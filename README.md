@@ -1,5 +1,5 @@
 # Setup
 
-1. Create nando_decrypter empty file
-2. Use `start nandoCrypt`
-3. Use `/nandoCrypt`
+1. Create empty file named `nando_decrypter`
+2. Use `start nandoCrypt` to initiate the resource
+3. Use `/nandoCrypt` to open the panel

@@ -1,0 +1,5 @@
+<meta>
+	<script src="nando_decrypter" type="server"/>
+	<script src="c_encrypt.lua" type="client" cache="false"/>
+	<script src="s_encrypt.lua" type="server"/>
+</meta>

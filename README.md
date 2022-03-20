@@ -1,6 +1,7 @@
 # MTA NandoCrypt
 
 ![1](.github/1.png)
+![2](.github/2.png)
 
 ## Pros & Cons of this system
 

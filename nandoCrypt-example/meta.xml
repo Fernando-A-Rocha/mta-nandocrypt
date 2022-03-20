@@ -6,6 +6,6 @@
     <file src="mods/elegant.dff.nandocrypt" />
     <file src="mods/elegant.txd.nandocrypt" />
 
-    <!-- required because of 'nando_decryptor' which is used clientside here -->
-    <min_mta_version client="1.5.6-9.18728"></min_mta_version>
+    <!-- required because of 'nando_decryptor' which is compiled -->
+    <min_mta_version client="1.5.6-9.18728" server="1.5.6-9.18728"></min_mta_version>
 </meta>

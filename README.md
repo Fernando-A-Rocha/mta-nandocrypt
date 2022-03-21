@@ -1,5 +1,7 @@
 # MTA NandoCrypt
 
+![Banner](https://i.imgur.com/4Ab6hS3.png)
+
 ## About
 
 MTA Forums topic: [Link](https://forum.mtasa.com/topic/134836-rel-nandocrypt-file-encryption-resource/)

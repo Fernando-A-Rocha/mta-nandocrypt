@@ -1,5 +1,3 @@
-# MTA NandoCrypt
-
 ![Banner](https://i.imgur.com/4Ab6hS3.png)
 
 ## About

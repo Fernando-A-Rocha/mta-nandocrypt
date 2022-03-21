@@ -26,9 +26,9 @@ It uses `aes128` ([Advanced Encryption Standard](https://en.wikipedia.org/wiki/A
 
 ## Setup
 
-1. Create empty file named `nando_decrypter` inside [nandoCrypt](/nandoCrypt)
-2. Use `start nandoCrypt` to initiate the resource
-3. Use `/nandoCrypt` to open the panel
+1. Create empty file named `nando_decrypter` inside [nando_crypt](/nando_crypt)
+2. Use `start nando_crypt` to initiate the resource
+3. Use `/nando_crypt` to open the panel
 
 ## Use
 
@@ -43,8 +43,8 @@ A `nando_decrypter` script file will be created, as well as `nando_decrypter_key
 Enter the file name without the custom extension and it will try to decrypt it using the decrypter file generated (*which can be used both clientside and serverside*).
 
 4. Copy `nando_decrypter` file generated to your own unique resource and use it to decrypt the files you just encrypted in your own way.
-Check [nandoCrypt-example](/nandoCrypt-example) to understand how this can be achieved.
-Keep `nando_decrypter_keys.json` in the nandoCrypt resource because it is used by the ecrypter to generate the `nando_decrypter` script.
+Check [nando_crypt-example](/nando_crypt-example) to understand how this can be achieved.
+Keep `nando_decrypter_keys.json` in the `nando_crypt` resource because it is used by the ecrypter to generate the `nando_decrypter` script.
 
 ## Advice
 

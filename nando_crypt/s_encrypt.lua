@@ -153,28 +153,26 @@ function encryptFile(fpath, secretKey, player)
 -- This decrypts a file (given path) using a secret key
 -- which is stored in this cached & Luac protected file.
 function ncDecrypt(file, callbackFunc)
-if type(file) ~= "string" then return false, "File path not string" end
-if type(callbackFunc) ~= "function" then return false, "Callback function invalid" end
-if not fileExists(file) then return false, "File doesn't exist" end
-local f = fileOpen(file)
-if not f then return false, "Failed to open file" end
-local fsize = fileGetSize(f)
-if not fsize then
-fileClose(f)
-return false, "Failed to get file size"
-end
-local content = fileRead(f, fsize)
-fileClose(f)
-if (not content) or (content == "") then return false, "Failed to read file content or empty" end
-local ivList = fromJSON('%s')
-local contentHash = md5(content)
-local theIV = ivList[contentHash]
-if not theIV then
-print(contentHash)
-iprint(ivList)
-return false, "Missing IV key for file content base64"
-end
-return decodeString("aes128", content, { key = base64Decode('%s'), iv = base64Decode(theIV) }, callbackFunc)
+	if type(file) ~= "string" then return false, "File path not string" end
+	if type(callbackFunc) ~= "function" then return false, "Callback function invalid" end
+	if not fileExists(file) then return false, "File doesn't exist" end
+	local f = fileOpen(file)
+	if not f then return false, "Failed to open file" end
+	local fsize = fileGetSize(f)
+	if not fsize then
+		fileClose(f)
+		return false, "Failed to get file size"
+	end
+	local content = fileRead(f, fsize)
+	fileClose(f)
+	if (not content) or (content == "") then return false, "Failed to read file content or empty" end
+	local ivList = fromJSON('%s')
+	local contentHash = md5(content)
+	local theIV = ivList[contentHash]
+	if not theIV then
+		return false, "Missing IV key for file content base64"
+	end
+	return decodeString("aes128", content, { key = base64Decode('%s'), iv = base64Decode(theIV) }, callbackFunc)
 end
 ]], toJSON(ivList), base64Encode(secretKey))
 
@@ -230,11 +228,11 @@ function requestMenu(thePlayer, cmd)
 
 	triggerClientEvent(thePlayer, thisResName..":openMenu", resourceRoot, scriptVersion)
 end
-addCommandHandler("NandoCrypt", requestMenu, false, false)
+addCommandHandler("nando_crypt", requestMenu, false, false)
 
 function requestDecryptFile(filePath)
 	if type(ncDecrypt) ~= "function" then
-		return outputChatBox("Decrypt function not loaded", thePlayer, 255,0,0)
+		return outputChatBox("Decryption function not loaded (check if "..FN_DECRYPTER_SCRIPT.." is valid)", thePlayer, 255,0,0)
 	end
 	filePath = filePath..ENCRYPTED_EXT
 	local worked, reason = ncDecrypt(filePath,
@@ -243,7 +241,7 @@ function requestDecryptFile(filePath)
 		end
 	)
 	if not worked then
-		return outputChatBox("Decrypt of '"..filePath.."' failed: "..tostring(reason), thePlayer, 255,0,0)
+		return outputChatBox("Decryption of '"..filePath.."' failed: "..tostring(reason), thePlayer, 255,0,0)
 	end
 end
 addEvent(thisResName..":requestDecryptFile", true)

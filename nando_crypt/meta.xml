@@ -2,7 +2,7 @@
     <!-- DOCUMENTATION:
 	https://github.com/Fernando-A-Rocha/mta-nandocrypt
 	-->
-    <info author="Fernando" name="mta-nandocrypt" description="file encrypter resource" version="1.0.0" type="script" />
+    <info author="Fernando" name="mta-nandocrypt" description="file encrypter resource" version="1.0.1" type="script" />
     
     <script src="nando_decrypter" type="server" />
     <script src="c_encrypt.lua" type="client" cache="false" />

@@ -30,7 +30,7 @@ It uses `aes128` ([Advanced Encryption Standard](https://en.wikipedia.org/wiki/A
 
 1. Create empty file named `nando_decrypter` inside [nando_crypt](/nando_crypt)
 2. Use `start nando_crypt` to initiate the resource
-3. Use `/nando_crypt` to open the panel
+3. Use `/nandocrypt` to open the panel
 
 ## Use
 

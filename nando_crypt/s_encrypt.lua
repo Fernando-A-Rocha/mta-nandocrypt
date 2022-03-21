@@ -228,7 +228,7 @@ function requestMenu(thePlayer, cmd)
 
 	triggerClientEvent(thePlayer, thisResName..":openMenu", resourceRoot, scriptVersion)
 end
-addCommandHandler("nando_crypt", requestMenu, false, false)
+addCommandHandler("nandocrypt", requestMenu, false, false)
 
 function requestDecryptFile(filePath)
 	if type(ncDecrypt) ~= "function" then

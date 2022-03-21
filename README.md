@@ -4,6 +4,8 @@
 
 MTA Forums topic: [Link](https://forum.mtasa.com/topic/134836-rel-nandocrypt-file-encryption-resource/)
 
+MTA Discord discussion thread: [Channel Link](https://discord.com/channels/278474088903606273/955219814358597642/955220504422273095)
+
 Star ⭐ this repository if you like it!
 
 Contact: Nando#7736 (Discord)

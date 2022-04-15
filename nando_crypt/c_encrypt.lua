@@ -4,7 +4,7 @@ local thisResName = getResourceName(thisRes)
 local SW, SH = guiGetScreenSize()
 local window, window2
 
-local savedFileName, secretKey
+local savedFileName, secretKey, savedFileList
 
 function openMenu(version)
 	closeMenu()
@@ -28,9 +28,17 @@ function openMenu(version)
 			outputChatBox("Loaded last used secret key from localPlayer element data", 180,180,180)
 		end
 	end
+	if savedFileList == nil then
+		local data = getElementData(localPlayer, thisResName..":savedFileList")
+		if data then
+			savedFileList = data
+			outputChatBox("Loaded file list from localPlayer element data", 180,180,180)
+		end
+	end
 
-	local WW, WH = 500, 205
+	local WW, WH = SW * 0.5, SH * 0.8
 	window = guiCreateWindow(SW/2 - WW/2, SH/2 - WH/2, WW, WH, "NandoCrypt ("..version..")", false)
+	guiSetAlpha(window, 0.9)
 
 	local close = guiCreateButton(10, WH-40, WW-20, 30, "Close", false, window)
 
@@ -43,7 +51,7 @@ function openMenu(version)
 		guiSetProperty(setkey, "NormalTextColour", "FF00FF00")
 	end
 
-	local decrypt = guiCreateButton(10, WH-110, WW-20, 30, "Decrypt File (Test)", false, window)
+	local decrypt = guiCreateButton(10, WH-110, WW-20, 30, "Decrypt Files (Test)", false, window)
 	if (secretKey ~= nil) then
 		guiSetProperty(decrypt, "NormalTextColour", "ff6373ff")
 	else
@@ -51,7 +59,7 @@ function openMenu(version)
 		guiSetProperty(decrypt, "NormalTextColour", "FFFF0000")
 	end
 
-	local encrypt = guiCreateButton(10, WH-145, WW-20, 30, "Encrypt File", false, window)
+	local encrypt = guiCreateButton(10, WH-145, WW-20, 30, "Encrypt Files", false, window)
 	if (secretKey ~= nil) then
 		guiSetProperty(encrypt, "NormalTextColour", "FFFFFFFF")
 	else
@@ -59,7 +67,23 @@ function openMenu(version)
 		guiSetProperty(encrypt, "NormalTextColour", "FFFF0000")
 	end
 
-	local file_edit = guiCreateEdit(10, WH-180, WW-20, 30, savedFileName, false, window)
+	local addFile = guiCreateButton(10, WH-180, (WW/2)-10, 30, "Add File", false, window)
+	if (secretKey ~= nil) then
+		guiSetProperty(addFile, "NormalTextColour", "FF00FF00")
+	else
+		guiSetEnabled(addFile, false)
+		guiSetProperty(addFile, "NormalTextColour", "FFFF0000")
+	end
+
+	local removeFile = guiCreateButton((WW/2), WH-180, (WW/2)-10, 30, "Remove File", false, window)
+	if (secretKey ~= nil) then
+		guiSetProperty(removeFile, "NormalTextColour", "ffff3098")
+	else
+		guiSetProperty(removeFile, "NormalTextColour", "FFFF0000")
+	end
+	guiSetEnabled(removeFile, false)
+
+	local file_edit = guiCreateEdit(10, WH-215, WW-20, 30, savedFileName, false, window)
 	if (secretKey ~= nil) then
 		addEventHandler( "onClientGUIChanged", file_edit, 
 		function (theElement)
@@ -71,28 +95,65 @@ function openMenu(version)
 		guiSetEnabled(file_edit, false)
 	end
 
+	local fileList_grid = guiCreateGridList(10, 25, WW-20, WH-250, false, window)
+	guiGridListAddColumn(fileList_grid, "Files ready to be encrypted", 0.9)
+
+	for path, _ in pairs(savedFileList or {}) do
+		guiGridListAddRow(fileList_grid, path)
+	end
+
+
 	addEventHandler( "onClientGUIClick", window, 
 	function (button, state, absoluteX, absoluteY)
 		if button ~= "left" then return end
+
+		local row,col = guiGridListGetSelectedItem(fileList_grid)
+		if row ~= -1 then
+			guiSetEnabled(addFile, false)
+			guiSetEnabled(removeFile, true)
+		else
+			guiSetEnabled(addFile, true)
+			guiSetEnabled(removeFile, false)
+		end
 
 		if source == close then
 			closeMenu()
 		
 		elseif source == setkey then
 			openChangeKeyMenu()
-		
-		elseif source == encrypt or source == decrypt then
+
+		elseif source == removeFile then
+
+			local filePath = guiGridListGetItemText(fileList_grid, row, 1)
+			savedFileList[filePath] = nil
+			setElementData(localPlayer, thisResName..":savedFileList", savedFileList, false)
+			openMenu(version)
+
+		elseif source == addFile then
+
 			local filePath = guiGetText(file_edit)
 			if filePath == "" then
 				return outputChatBox("You need to enter a valid serverside file path.", 255,25,25)
 			end
+
+			if not savedFileList then savedFileList = {} end
+			savedFileList[filePath] = true
+			setElementData(localPlayer, thisResName..":savedFileList", savedFileList, false)
+			openMenu(version)
+		
+		elseif source == encrypt or source == decrypt then
+
+			if not savedFileList or (table.size(savedFileList) == 0) then
+				return outputChatBox("You need to add serverside file paths to the list.", 255,25,25)
+			end
+
 			closeMenu()
 
 			if source == encrypt then
-				triggerServerEvent(thisResName..":requestEncryptFile", resourceRoot, filePath, secretKey)
+				triggerServerEvent(thisResName..":requestEncryptFile", resourceRoot, savedFileList, secretKey)
 				setElementData(localPlayer, thisResName..":lastUsedSecretKey", secretKey, false)
 			elseif source == decrypt then
-				triggerServerEvent(thisResName..":requestDecryptFile", resourceRoot, filePath)
+				triggerServerEvent(thisResName..":requestDecryptFile", resourceRoot, savedFileList)
 			end
 		end
 	end)
@@ -179,4 +240,10 @@ function genRandomKey()
 		rstring = rstring .. chars:sub(rand, rand)
 	end
 	return rstring
+end
+
+function table.size(tab)
+    local length = 0
+    for _ in pairs(tab) do length = length + 1 end
+    return length
 end

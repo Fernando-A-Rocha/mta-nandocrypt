@@ -10,6 +10,9 @@ local ENCRYPTED_EXT = ".nandocrypt"
 
 -- Extra security to hide the secret key from people who can access server files
 local COMPILE_DERCRYPTER = true
+local COMPILE_URL = "https://luac.mtasa.com/?compile=1&debug=0&obfuscate=3"
+
+local waitingEncrypt = {}
 
 function compileCallback(responseData, responseError, fn, player)
 
@@ -52,22 +55,26 @@ end
 function encryptFile(fpath, secretKey, player)
 
 	if not fileExists(fpath) then
-		return outputChatBox("File doesn't exist: "..fpath, player, 255,25,25)
+		outputChatBox("File doesn't exist: "..fpath, player, 255,25,25)
+		return false
 	end
 	local ef = fileOpen(fpath)
 	if not ef then
-		return outputChatBox("Failed to open: "..fpath, player, 255,25,25)
+		outputChatBox("Failed to open: "..fpath, player, 255,25,25)
+		return false
 	end
 	local fileContent = fileRead(ef, fileGetSize(ef))
 	fileClose(ef)
 	if (not fileContent) or (fileContent == "") then
-		return outputChatBox("Failed to read or file is empty: "..fpath, player, 255,25,25)
+		outputChatBox("Failed to read or file is empty: "..fpath, player, 255,25,25)
+		return false
 	end
 
 	local encoded, iv = encodeString("aes128", fileContent, { key = secretKey })
 	-- iv depends on data encrypted
 	if not encoded then
-		return outputChatBox("Encoding algorithm failed", player, 255,25,25)
+		outputChatBox("Encoding algorithm failed", player, 255,25,25)
+		return false
 	end
 	local encodedContentHash = md5(encoded)
 
@@ -79,14 +86,16 @@ function encryptFile(fpath, secretKey, player)
 		opened = true
 		kf = fileOpen(kfn)
 		if not kf then
-			return outputChatBox("Failed to open: "..kfn, player, 255,25,25)
+			outputChatBox("Failed to open: "..kfn, player, 255,25,25)
+			return false
 		end
 	end
 	if opened then
 		local kfJson = fileRead(kf, fileGetSize(kf))
 		fileClose(kf)
 		if not kfJson then
-			return outputChatBox("Failed to read: "..kfn, player, 255,25,25)
+			outputChatBox("Failed to read: "..kfn, player, 255,25,25)
+			return false
 		end
 		if kfJson ~= "" then
 			ivList = fromJSON(kfJson)
@@ -94,26 +103,30 @@ function encryptFile(fpath, secretKey, player)
 		
 		if not ivList then
 			iprint(kfJson)
-			return outputChatBox("Failed to read IV keys from: "..kfn, player, 255,25,25)
+			outputChatBox("Failed to read IV keys from: "..kfn, player, 255,25,25)
+			return false
 		end
 		fileDelete(kfn)
 	end
 	kf = fileCreate(kfn)
 	if not kf then
-		return outputChatBox("Failed to create: "..kfn, player, 255,25,25)
+		outputChatBox("Failed to create: "..kfn, player, 255,25,25)
+		return false
 	end
 
 	local efnn = fpath..ENCRYPTED_EXT
 	if fileExists(efnn) then
 		local efn = fileOpen(efnn)
 		if not efn then
-			return outputChatBox("Failed to open: "..efnn, player, 255,25,25)
+			outputChatBox("Failed to open: "..efnn, player, 255,25,25)
+			return false
 		end
 		-- delete old useless hash
 		local efnContent = fileRead(efn, fileGetSize(efn))
 		fileClose(efn)
 		if not efnContent then
-			return outputChatBox("Failed to read: "..efnn, player, 255,25,25)
+			outputChatBox("Failed to read: "..efnn, player, 255,25,25)
+			return false
 		end
 		local encodedContentHash_old = md5(efnContent)
 		if ivList[encodedContentHash_old] then
@@ -124,7 +137,8 @@ function encryptFile(fpath, secretKey, player)
 	end
 	local efn = fileCreate(efnn)
 	if not efn then
-		return outputChatBox("Failed to open: "..efnn, player, 255,25,25)
+		outputChatBox("Failed to open: "..efnn, player, 255,25,25)
+		return false
 	end
 	fileWrite(efn, encoded)
 	fileClose(efn)
@@ -145,7 +159,8 @@ function encryptFile(fpath, secretKey, player)
 	end
 	f = fileCreate(fn)
 	if not f then
-		return outputChatBox("Failed to open: "..fn, player, 255,25,25)
+		outputChatBox("Failed to open: "..fn, player, 255,25,25)
+		return false
 	end
 	
 	local content = string.format(
@@ -179,21 +194,12 @@ end
 	fileWrite(f, content)
 	fileClose(f)
 
-
 	addEncryptLog(
 		"Encrypted file '"..fpath.."' and obtained hash '"..encodedContentHash.."'. Corresponding IV stored in '"..kfn.."'."
 	)
 
-	-- Skip compilation:
-	if (not COMPILE_DERCRYPTER) then
-		outputChatBox("Created '"..fn.."'", player, 25,255,25)
-		outputChatBox("Restarting "..thisResName.." resource..", player, 187,187,187)
-		restartResource(thisRes)
-
-	else
-		outputChatBox("Created '"..fn.."', compiling..", player, 25,255,25)
-		fetchRemote("https://luac.mtasa.com/?compile=1&debug=0&obfuscate=3", compileCallback, content, true, fn, player)
-	end
+	outputChatBox("Created '"..fn.."'", player, 25,255,25)
+	return true
 end
 
 function addEncryptLog(msg)
@@ -230,25 +236,54 @@ function requestMenu(thePlayer, cmd)
 end
 addCommandHandler("nandocrypt", requestMenu, false, false)
 
-function requestDecryptFile(filePath)
+function requestDecryptFile(filePaths)
 	if type(ncDecrypt) ~= "function" then
 		return outputChatBox("Decryption function not loaded (check if "..FN_DECRYPTER_SCRIPT.." is valid)", thePlayer, 255,0,0)
 	end
-	filePath = filePath..ENCRYPTED_EXT
-	local worked, reason = ncDecrypt(filePath,
-		function(data)
-			outputChatBox("Decryption of '"..filePath.."' worked", thePlayer, 225,255,0)
+	for filePath,_ in pairs(filePaths) do
+		filePath = filePath..ENCRYPTED_EXT
+		local worked, reason = ncDecrypt(filePath,
+			function(data)
+				outputChatBox("Decryption of '"..filePath.."' worked", thePlayer, 225,255,0)
+			end
+		)
+		if not worked then
+			return outputChatBox("Aborting, decryption of '"..filePath.."' failed: "..tostring(reason), thePlayer, 255,0,0)
 		end
-	)
-	if not worked then
-		return outputChatBox("Decryption of '"..filePath.."' failed: "..tostring(reason), thePlayer, 255,0,0)
 	end
 end
 addEvent(thisResName..":requestDecryptFile", true)
 addEventHandler(thisResName..":requestDecryptFile", resourceRoot, requestDecryptFile)
 
-function requestEncryptFile(filePath, secretKey)
-	encryptFile(filePath, secretKey, client)
+function requestEncryptFile(filePaths, secretKey)
+	if table.size(waitingEncrypt) > 0 then
+		return outputChatBox("One or more files are currently being encrypted, try again later.", client, 255,0,0)
+	end
+
+	for filePath,_ in pairs(filePaths) do
+		if not encryptFile(filePath, secretKey, client) then
+			outputChatBox("Aborted encryptions.", client, 255,255,0)
+			break
+		end
+	end
+
+	if not COMPILE_DERCRYPTER then
+		outputChatBox("Restarting "..thisResName.." resource..", client, 187,187,187)
+		restartResource(thisRes)
+	else
+		local fn = FN_DECRYPTER_SCRIPT
+		local f = fileOpen(fn)
+		if not f then
+			return outputChatBox("Failed to open: "..fn, client, 255,25,25)
+		end
+		local content = fileRead(f, fileGetSize(f))
+		fileClose(f)
+		if not content or content == "" then
+			return outputChatBox("File is empty: "..fn, client, 255,25,25)
+		end
+		outputChatBox("Compiling '"..fn.."'..", client, 75,255,75)
+		fetchRemote(COMPILE_URL, compileCallback, content, true, fn, client)
+	end
 end
 addEvent(thisResName..":requestEncryptFile", true)
 addEventHandler(thisResName..":requestEncryptFile", resourceRoot, requestEncryptFile)
@@ -261,3 +296,9 @@ function (startedResource)
 	local ver = getResourceInfo(startedResource, "version")
 	scriptVersion = ((ver and "v"..ver) or "Unknown Version")
 end)
+
+function table.size(tab)
+    local length = 0
+    for _ in pairs(tab) do length = length + 1 end
+    return length
+end

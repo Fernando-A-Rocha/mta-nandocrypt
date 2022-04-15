@@ -98,7 +98,7 @@ function encryptFile(fpath, secretKey, player)
 		end
 		fileDelete(kfn)
 	end
-	local kf = fileCreate(kfn)
+	kf = fileCreate(kfn)
 	if not kf then
 		return outputChatBox("Failed to create: "..kfn, player, 255,25,25)
 	end

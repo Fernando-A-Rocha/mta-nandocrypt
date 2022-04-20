@@ -31,8 +31,9 @@ function replaceMods(theType)
 
         local path = v[theType]
         if type(path)=="string" then
+        	local worked
 			if theType == "txd" then
-                local worked = ncDecrypt(path,
+                worked = ncDecrypt(path,
                     function(data)
                         if engineImportTXD(engineLoadTXD(data), model) then
                         	print(("Replaced %s (%s) for model %d"):format(path, string.upper(theType), model))
@@ -41,12 +42,8 @@ function replaceMods(theType)
                         if checkReplaceCompleted("txd") then replaceMods("dff") end
                     end
                 )
-                if not worked then
-                	outputDebugString("ABORTING: Decryption of '"..path.."' failed", 1)
-                    return
-                end
 			elseif theType == "dff" then
-                local worked = ncDecrypt(path,
+                worked = ncDecrypt(path,
                     function(data)
                         if engineReplaceModel(engineLoadDFF(data), model) then
                         	print(("Replaced %s (%s) for model %d"):format(path, string.upper(theType), model))
@@ -60,7 +57,7 @@ function replaceMods(theType)
                     return
                 end
 			elseif theType == "col" then
-				local worked = ncDecrypt(path,
+				worked = ncDecrypt(path,
                     function(data)
                         if engineReplaceCOL(engineLoadCOL(data), model) then
                         	print(("Replaced %s (%s) for model %d"):format(path, string.upper(theType), model))
@@ -69,11 +66,11 @@ function replaceMods(theType)
                         checkReplaceCompleted("col")
                     end
                 )
-                if not worked then
-                	outputDebugString("ABORTING: Decryption of '"..path.."' failed", 1)
-                    return
-                end
 			end
+            if not worked then
+            	outputDebugString("ABORTING: Decryption of '"..path.."' failed", 1)
+                return
+            end
 		end
 	end
 end

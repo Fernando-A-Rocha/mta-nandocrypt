@@ -22,7 +22,7 @@ function openMenu(version)
 		end
 	end
 	if secretKey == nil then
-		local data = getElementData(localPlayer, thisResName..":lastUsedSecretKey")
+		local data = getElementData(localPlayer, thisResName..":secretKey")
 		if data then
 			secretKey = data
 			outputChatBox("Loaded last used secret key from localPlayer element data", 180,180,180)
@@ -73,6 +73,7 @@ function openMenu(version)
 	else
 		guiSetEnabled(addFile, false)
 		guiSetProperty(addFile, "NormalTextColour", "FFFF0000")
+		guiSetEnabled(addFile, false)
 	end
 
 	local removeFile = guiCreateButton((WW/2), WH-180, (WW/2)-10, 30, "Remove File", false, window)
@@ -91,7 +92,7 @@ function openMenu(version)
 			setElementData(localPlayer, thisResName..":savedFileName", savedFileName, false)
 		end, false)
 	else
-		guiSetText(file_edit, "A secret key & decrypter file needs to be generated 1st")
+		guiSetText(file_edit, "A secret key needs to be generated in order to use the encryption function")
 		guiSetEnabled(file_edit, false)
 	end
 
@@ -108,11 +109,16 @@ function openMenu(version)
 		if button ~= "left" then return end
 
 		local row,col = guiGridListGetSelectedItem(fileList_grid)
-		if row ~= -1 then
-			guiSetEnabled(addFile, false)
-			guiSetEnabled(removeFile, true)
+		if (secretKey ~= nil) then
+			if row ~= -1 then
+				guiSetEnabled(addFile, false)
+				guiSetEnabled(removeFile, true)
+			else
+				guiSetEnabled(addFile, true)
+				guiSetEnabled(removeFile, false)
+			end
 		else
-			guiSetEnabled(addFile, true)
+			guiSetEnabled(addFile, false)
 			guiSetEnabled(removeFile, false)
 		end
 
@@ -151,7 +157,6 @@ function openMenu(version)
 
 			if source == encrypt then
 				triggerServerEvent(thisResName..":requestEncryptFile", resourceRoot, savedFileList, secretKey)
-				setElementData(localPlayer, thisResName..":lastUsedSecretKey", secretKey, false)
 			elseif source == decrypt then
 				triggerServerEvent(thisResName..":requestDecryptFile", resourceRoot, savedFileList)
 			end
@@ -214,6 +219,8 @@ function openChangeKeyMenu()
 				return outputChatBox("Key must be 16 characters long. Click randomize to generate one automatically.", 255,25,25)
 			end
 			secretKey = key
+			setElementData(localPlayer, thisResName..":secretKey", secretKey, false)
+
 			setClipboard(secretKey)
 			outputChatBox(secretKey, 0,255,255)
 			outputChatBox("Save the new secret key somewhere private! #ffffff(copied to clipboard)", 255,126,0, true)

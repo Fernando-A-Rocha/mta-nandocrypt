@@ -1,0 +1,3 @@
+In order for this resource to work you need to create a nando_decrypter script file using the NandoCrypt tool
+You then place your mod files inside the resource and list them in meta.xml
+Like the example, you declare which models to replace in c_replace.lua

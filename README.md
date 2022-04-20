@@ -47,8 +47,10 @@ A `nando_decrypter` script file will be created, as well as `nando_decrypter_key
 Enter the file name without the custom extension and it will try to decrypt it using the decrypter file generated (*which can be used both clientside and serverside*).
 
 4. Copy `nando_decrypter` file generated to your own unique resource and use it to decrypt the files you just encrypted in your own way.
-Check [nando_crypt-example](/nando_crypt-example) to understand how this can be achieved.
 Keep `nando_decrypter_keys.json` in the `nando_crypt` resource because it is used by the ecrypter to generate the `nando_decrypter` script.
+
+5. Check [nando_crypt-example](/nando_crypt-example) to understand how this can be achieved.
+![example_demo](/nando_crypt-example/demo.png)
 
 ## Advice
 

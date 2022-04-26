@@ -57,6 +57,10 @@ Keep `nando_decrypter_keys.json` in the `nando_crypt` resource because it is use
 - If working on a project with multiple people or a shared repository, don't share the secret key used to encrypt the files.
 - **Sorry** if the instructions seem a bit confusing at first! I think that if you experiment with the resource you will get used to it.
 
+## Related Projects
+
+- [mta-add-models](https://github.com/Fernando-A-Rocha/mta-add-models): a library for adding new models (vehicles, skins, etc) to your server which supports **NandoCrypt**
+
 ## Acknowledgements
 
 - [Patrick](https://forum.mtasa.com/profile/43688-patrick/) - Creator of [pCrypt](https://mtaclub.eu/pcrypt) - main inspiration for this project & helped me resolve some issues!

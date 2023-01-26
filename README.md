@@ -59,7 +59,8 @@ Keep `nando_decrypter_keys.json` in the `nando_crypt` resource because it is use
 
 ## Related Projects
 
-- [mta-add-models](https://github.com/Fernando-A-Rocha/mta-add-models): a library for adding new models (vehicles, skins, etc) to your server which supports **NandoCrypt**
+- [mta-mod-downloader](https://github.com/Fernando-A-Rocha/mta-mod-downloader#readme): a mod downloader system which supports **NandoCrypt**
+- [mta-add-models](https://github.com/Fernando-A-Rocha/mta-add-models#readme): a library for adding new models (vehicles, skins, etc) to your server which supports **NandoCrypt**
 
 ## Acknowledgements
 

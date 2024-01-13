@@ -4,11 +4,9 @@
 
 MTA Forums topic: [Link](https://forum.mtasa.com/topic/134836-rel-nandocrypt-file-encryption-resource/)
 
-MTA Discord discussion thread: [Channel Link](https://discord.com/channels/278474088903606273/955219814358597642/955220504422273095)
+If you need help with anything related to this project, please read the corresponding section on the MTA forum thread linked above.
 
 Star ⭐ this repository if you like it!
-
-Contact: Nando#7736 (Discord)
 
 This MTA resource lets you encrypt any files using a secret key (string) that is stored inside a script that it generates & compiles. You use the script it creates to decrypt the files in your own resource(s).
 

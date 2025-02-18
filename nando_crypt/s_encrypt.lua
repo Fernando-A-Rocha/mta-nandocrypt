@@ -1,6 +1,7 @@
 local thisRes = getThisResource()
 local thisResName = getResourceName(thisRes)
-local scriptVersion
+local ver = getResourceInfo(thisRes, "version")
+local scriptVersion = ((ver and "v"..ver) or "Unknown Version")
 
 local FN_DECRYPTER_SCRIPT = "nando_decrypter"
 local FN_DECRYPTER_KEYS = "nando_decrypter_keys.json"
@@ -12,7 +13,8 @@ local ENCRYPTED_EXT = ".nandocrypt"
 local COMPILE_DERCRYPTER = true
 local COMPILE_URL = "https://luac.mtasa.com/?compile=1&debug=0&obfuscate=3"
 
-local waitingEncrypt = {}
+addEvent(thisResName..":requestDecryptFile", true)
+addEvent(thisResName..":requestEncryptFile", true)
 
 function compileCallback(responseData, responseError, fn, player)
 
@@ -78,7 +80,7 @@ function encryptFile(fpath, secretKey, player)
 	end
 	local encodedContentHash = md5(encoded)
 
-	local ivList = {}
+	local ivList
 	local kfn = FN_DECRYPTER_KEYS
 	local kf
 	local opened = false
@@ -100,7 +102,7 @@ function encryptFile(fpath, secretKey, player)
 		if kfJson ~= "" then
 			ivList = fromJSON(kfJson)
 		end
-		
+
 		if not ivList then
 			iprint(kfJson)
 			outputChatBox("Failed to read IV keys from: "..kfn, player, 255,25,25)
@@ -146,7 +148,7 @@ function encryptFile(fpath, secretKey, player)
 	outputChatBox("Encrypted '"..fpath.."' into '"..efnn.."'", player, 25,255,25)
 
 
-	local iv64 = base64Encode(iv)
+	local iv64 = encodeString("base64", iv)
 	ivList[encodedContentHash] = iv64
 
 	fileWrite(kf, toJSON(ivList))
@@ -162,7 +164,7 @@ function encryptFile(fpath, secretKey, player)
 		outputChatBox("Failed to open: "..fn, player, 255,25,25)
 		return false
 	end
-	
+
 	local content = string.format(
 [[-- Created by Nando
 -- This decrypts a file (given path) using a secret key
@@ -187,9 +189,9 @@ function ncDecrypt(file, callbackFunc)
 	if not theIV then
 		return false, "Missing IV key for file content base64"
 	end
-	return decodeString("aes128", content, { key = base64Decode('%s'), iv = base64Decode(theIV) }, callbackFunc)
+	return decodeString("aes128", content, { key = decodeString("base64", '%s'), iv = decodeString("base64", theIV) }, callbackFunc)
 end
-]], toJSON(ivList), base64Encode(secretKey))
+]], toJSON(ivList), encodeString("base64", secretKey))
 
 	fileWrite(f, content)
 	fileClose(f)
@@ -228,38 +230,64 @@ function addEncryptLog(msg)
 	return true
 end
 
+local function getFilesInFolderRecursively(parentPath, folderName)
+	local files = {}
+	local parentFolder
+	if parentPath then
+		parentFolder = parentPath .. "/" .. folderName
+	else
+		parentFolder = folderName
+	end
+	for _, fileOrFolder in pairs(pathListDir(parentFolder) or {}) do
+		if pathIsFile(fileOrFolder) then
+			files[#files+1] = parentFolder.."/"..fileOrFolder
+		elseif pathIsDirectory(fileOrFolder) then
+			local subFiles = getFilesInFolderRecursively(parentFolder, fileOrFolder)
+			for _, subFile in pairs(subFiles) do
+				files[#files+1] = subFile
+			end
+		end
+	end
+	return files
+end
 
-function requestMenu(thePlayer, cmd)
-	-- permission checks here
-
-	triggerClientEvent(thePlayer, thisResName..":openMenu", resourceRoot, scriptVersion)
+local function requestMenu(thePlayer, cmd, option)
+	if not (option == "menu" or option == "loadfiles") then
+		return outputChatBox("SYNTAX: /"..cmd.." menu|loadfiles", thePlayer, 255,255,0)
+	end
+	if option == 'menu' then
+		triggerClientEvent(thePlayer, thisResName..":openMenu", thePlayer, scriptVersion)
+	elseif option == 'loadfiles' then
+		local files = getFilesInFolderRecursively(false, "files")
+		local files2 = {}
+		for _, file in pairs(files) do
+			files2[file] = true
+		end
+		triggerClientEvent(thePlayer, thisResName..":loadFileListFromServer", thePlayer, files2)
+	end
 end
 addCommandHandler("nandocrypt", requestMenu, false, false)
 
 function requestDecryptFile(filePaths)
+	if not client then return end
 	if type(ncDecrypt) ~= "function" then
-		return outputChatBox("Decryption function not loaded (check if "..FN_DECRYPTER_SCRIPT.." is valid)", thePlayer, 255,0,0)
+		return outputChatBox("Decryption function not loaded (check if "..FN_DECRYPTER_SCRIPT.." is valid)", client, 255,0,0)
 	end
 	for filePath,_ in pairs(filePaths) do
 		filePath = filePath..ENCRYPTED_EXT
 		local worked, reason = ncDecrypt(filePath,
 			function(data)
-				outputChatBox("Decryption of '"..filePath.."' worked", thePlayer, 225,255,0)
+				outputChatBox("Decryption of '"..filePath.."' worked", client, 225,255,0)
 			end
 		)
 		if not worked then
-			return outputChatBox("Aborting, decryption of '"..filePath.."' failed: "..tostring(reason), thePlayer, 255,0,0)
+			return outputChatBox("Aborting, decryption of '"..filePath.."' failed: "..tostring(reason), client, 255,0,0)
 		end
 	end
 end
-addEvent(thisResName..":requestDecryptFile", true)
-addEventHandler(thisResName..":requestDecryptFile", resourceRoot, requestDecryptFile)
+addEventHandler(thisResName..":requestDecryptFile", resourceRoot, requestDecryptFile, false)
 
 function requestEncryptFile(filePaths, secretKey)
-	if table.size(waitingEncrypt) > 0 then
-		return outputChatBox("One or more files are currently being encrypted, try again later.", client, 255,0,0)
-	end
-
 	for filePath,_ in pairs(filePaths) do
 		if not encryptFile(filePath, secretKey, client) then
 			outputChatBox("Aborted encryptions.", client, 255,255,0)
@@ -282,23 +310,7 @@ function requestEncryptFile(filePaths, secretKey)
 			return outputChatBox("File is empty: "..fn, client, 255,25,25)
 		end
 		outputChatBox("Compiling '"..fn.."'..", client, 75,255,75)
-		fetchRemote(COMPILE_URL, compileCallback, content, true, fn, client)
+		fetchRemote(COMPILE_URL, compileCallback, {content, true, fn, client})
 	end
 end
-addEvent(thisResName..":requestEncryptFile", true)
-addEventHandler(thisResName..":requestEncryptFile", resourceRoot, requestEncryptFile)
-
-
-addEventHandler( "onResourceStart", resourceRoot, 
-function (startedResource)
-	math.randomseed(os.time())
-
-	local ver = getResourceInfo(startedResource, "version")
-	scriptVersion = ((ver and "v"..ver) or "Unknown Version")
-end)
-
-function table.size(tab)
-    local length = 0
-    for _ in pairs(tab) do length = length + 1 end
-    return length
-end
+addEventHandler(thisResName..":requestEncryptFile", resourceRoot, requestEncryptFile, false)

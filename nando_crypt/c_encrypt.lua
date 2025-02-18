@@ -6,6 +6,20 @@ local window, window2
 
 local savedFileName, secretKey, savedFileList
 
+addEvent(thisResName..":openMenu", true)
+addEvent(thisResName..":loadFileListFromServer", true)
+
+addEventHandler(thisResName..":loadFileListFromServer", localPlayer, function(flist)
+	savedFileList = flist
+	setElementData(localPlayer, thisResName..":savedFileList", savedFileList, false)
+	local c = 0
+	for _ in pairs(savedFileList) do c = c + 1 end
+	outputChatBox("Loaded "..c.." files from server", 25,255,25)
+	if not (isElement(window) or isElement(window2)) then
+		outputChatBox("Feel free to open the menu now.", 180,180,180)
+	end
+end, false)
+
 function openMenu(version)
 	closeMenu()
 
@@ -86,8 +100,8 @@ function openMenu(version)
 
 	local file_edit = guiCreateEdit(10, WH-215, WW-20, 30, savedFileName, false, window)
 	if (secretKey ~= nil) then
-		addEventHandler( "onClientGUIChanged", file_edit, 
-		function (theElement)
+		addEventHandler( "onClientGUIChanged", file_edit,
+		function ()
 			savedFileName = guiGetText(source)
 			setElementData(localPlayer, thisResName..":savedFileName", savedFileName, false)
 		end, false)
@@ -104,8 +118,8 @@ function openMenu(version)
 	end
 
 
-	addEventHandler( "onClientGUIClick", window, 
-	function (button, state, absoluteX, absoluteY)
+	addEventHandler( "onClientGUIClick", window,
+	function (button)
 		if button ~= "left" then return end
 
 		local row,col = guiGridListGetSelectedItem(fileList_grid)
@@ -124,7 +138,7 @@ function openMenu(version)
 
 		if source == close then
 			closeMenu()
-		
+
 		elseif source == setkey then
 			openChangeKeyMenu()
 
@@ -146,11 +160,11 @@ function openMenu(version)
 			savedFileList[filePath] = true
 			setElementData(localPlayer, thisResName..":savedFileList", savedFileList, false)
 			openMenu(version)
-		
+
 		elseif source == encrypt or source == decrypt then
 
 			if not savedFileList or (table.size(savedFileList) == 0) then
-				return outputChatBox("You need to add serverside file paths to the list.", 255,25,25)
+				return outputChatBox("You need to add server-side file paths to the list.", 255,25,25)
 			end
 
 			closeMenu()
@@ -163,8 +177,7 @@ function openMenu(version)
 		end
 	end)
 end
-addEvent(thisResName..":openMenu", true)
-addEventHandler(thisResName..":openMenu", resourceRoot, openMenu)
+addEventHandler(thisResName..":openMenu", localPlayer, openMenu, false)
 
 function closeMenu()
 	if isElement(window) then destroyElement(window) end
@@ -200,8 +213,8 @@ function openChangeKeyMenu()
 	guiSetProperty(random, "NormalTextColour", "ffdc7aff")
 
 
-	addEventHandler( "onClientGUIClick", window2, 
-	function (button, state, absoluteX, absoluteY)
+	addEventHandler( "onClientGUIClick", window2,
+	function (button)
 		if button ~= "left" then return end
 
 		if source == close then
@@ -209,7 +222,7 @@ function openChangeKeyMenu()
 
 		elseif source == random then
 			guiSetText(key_edit, genRandomKey())
-		
+
 		elseif source == setkey then
 			local key = guiGetText(key_edit)
 			if key == "" then

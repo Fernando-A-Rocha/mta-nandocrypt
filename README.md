@@ -53,7 +53,7 @@ Keep `nando_decrypter_keys.json` in the `nando_crypt` resource because it is use
 ## Advice
 
 - If working on a project with multiple people or a shared repository, don't share the secret key used to encrypt the files.
-- **Sorry** if the instructions seem a bit confusing at first! I think that if you experiment with the resource you will get used to it.
+- The instructions may seem a bit confusing at first! I think that if you experiment with the resource you will get used to it.
 
 ## Related Projects
 

@@ -2,14 +2,15 @@
     <!-- DOCUMENTATION:
 	https://github.com/Fernando-A-Rocha/mta-nandocrypt
 	-->
-    <info author="Fernando" name="mta-nandocrypt" description="file encrypter resource" version="2.0.1" type="script" />
+    <info author="Fernando" name="mta-nandocrypt" description="file encrypter resource"
+        version="2.2.0" type="script" />
     
     <script src="nando_decrypter" type="server" />
     <script src="c_encrypt.lua" type="client" cache="false" />
     <script src="s_encrypt.lua" type="server" />
 
-    <!-- required because of 'nando_decrypter' which is compiled -->
-    <min_mta_version client="1.5.9-9.20898.0" server="1.5.9-9.20898.0"></min_mta_version>
+    <!-- Required because this script makes use of recent functions -->
+    <min_mta_version client="1.6.0-9.22470.0" server="1.6.0-9.22470.0"></min_mta_version>
     
     <!-- ACL permissions that this resource requires -->
     <aclrequest>

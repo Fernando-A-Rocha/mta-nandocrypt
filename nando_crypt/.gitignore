@@ -1,5 +1,5 @@
 files/*
-!files/empty.txt
+!files/.keep
 nando_decrypter
 nando_decrypter_keys.json
 nando_encrypt.log

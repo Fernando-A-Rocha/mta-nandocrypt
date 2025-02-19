@@ -5,6 +5,7 @@ local SW, SH = guiGetScreenSize()
 local window, window2
 
 local savedFileName, secretKey, savedFileList
+local scriptVersion
 
 addEvent(thisResName..":openMenu", true)
 addEvent(thisResName..":loadFileListFromServer", true)
@@ -12,15 +13,17 @@ addEvent(thisResName..":loadFileListFromServer", true)
 addEventHandler(thisResName..":loadFileListFromServer", localPlayer, function(flist)
 	savedFileList = flist
 	setElementData(localPlayer, thisResName..":savedFileList", savedFileList, false)
-	local c = 0
-	for _ in pairs(savedFileList) do c = c + 1 end
-	outputChatBox("Loaded "..c.." files from server", 25,255,25)
 	if not (isElement(window) or isElement(window2)) then
-		outputChatBox("Feel free to open the menu now.", 180,180,180)
+		openMenu()
+	else
+		outputChatBox("Re-open the menu to see the updated file list", 180,180,180)
 	end
 end, false)
 
-function openMenu(version)
+function openMenu(versionFromServer)
+	if versionFromServer then
+		scriptVersion = versionFromServer
+	end
 	closeMenu()
 
 	guiSetInputMode("no_binds_when_editing")
@@ -51,7 +54,7 @@ function openMenu(version)
 	end
 
 	local WW, WH = SW * 0.5, SH * 0.8
-	window = guiCreateWindow(SW/2 - WW/2, SH/2 - WH/2, WW, WH, "NandoCrypt ("..version..")", false)
+	window = guiCreateWindow(SW/2 - WW/2, SH/2 - WH/2, WW, WH, "NandoCrypt ("..scriptVersion..")", false)
 	guiSetAlpha(window, 0.9)
 
 	local close = guiCreateButton(10, WH-40, WW-20, 30, "Close", false, window)
@@ -147,7 +150,7 @@ function openMenu(version)
 			local filePath = guiGridListGetItemText(fileList_grid, row, 1)
 			savedFileList[filePath] = nil
 			setElementData(localPlayer, thisResName..":savedFileList", savedFileList, false)
-			openMenu(version)
+			openMenu()
 
 		elseif source == addFile then
 
@@ -159,7 +162,7 @@ function openMenu(version)
 			if not savedFileList then savedFileList = {} end
 			savedFileList[filePath] = true
 			setElementData(localPlayer, thisResName..":savedFileList", savedFileList, false)
-			openMenu(version)
+			openMenu()
 
 		elseif source == encrypt or source == decrypt then
 

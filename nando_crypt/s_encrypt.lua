@@ -16,7 +16,7 @@ local COMPILE_URL = "https://luac.mtasa.com/?compile=1&debug=0&obfuscate=3"
 addEvent(thisResName..":requestDecryptFile", true)
 addEvent(thisResName..":requestEncryptFile", true)
 
-function compileCallback(responseData, responseError, fn, player)
+function compileCallback(responseData, responseInfo, fn, player)
 
 	local errorCodes = {
 		["ERROR Nothing to do - Please select compile and/or obfuscate"] = true,
@@ -26,7 +26,7 @@ function compileCallback(responseData, responseError, fn, player)
 		["ERROR Already encrypted"] = true,
 	}
 
-	if responseError == 0 then
+	if responseInfo.success then
 
 		if errorCodes[responseData] == true then
 			return outputChatBox("#ffffffLuac: #ff0000'"..fn.."' failed to compile: "..responseData, player, 255,255,255, true)
@@ -80,7 +80,7 @@ function encryptFile(fpath, secretKey, player)
 	end
 	local encodedContentHash = md5(encoded)
 
-	local ivList
+	local ivList = {}
 	local kfn = FN_DECRYPTER_KEYS
 	local kf
 	local opened = false
@@ -101,12 +101,10 @@ function encryptFile(fpath, secretKey, player)
 		end
 		if kfJson ~= "" then
 			ivList = fromJSON(kfJson)
-		end
-
-		if not ivList then
-			iprint(kfJson)
-			outputChatBox("Failed to read IV keys from: "..kfn, player, 255,25,25)
-			return false
+			if not ivList then
+				outputChatBox("Failed to read IV keys from: "..kfn, player, 255,25,25)
+				return false
+			end
 		end
 		fileDelete(kfn)
 	end
@@ -239,9 +237,12 @@ local function getFilesInFolderRecursively(parentPath, folderName)
 		parentFolder = folderName
 	end
 	for _, fileOrFolder in pairs(pathListDir(parentFolder) or {}) do
-		if pathIsFile(fileOrFolder) then
-			files[#files+1] = parentFolder.."/"..fileOrFolder
-		elseif pathIsDirectory(fileOrFolder) then
+		local thisPath = parentFolder.."/"..fileOrFolder
+		if pathIsFile(thisPath) then
+			if not (fileOrFolder == '.keep') then
+				files[#files+1] = thisPath
+			end
+		elseif pathIsDirectory(thisPath) then
 			local subFiles = getFilesInFolderRecursively(parentFolder, fileOrFolder)
 			for _, subFile in pairs(subFiles) do
 				files[#files+1] = subFile
@@ -258,11 +259,13 @@ local function requestMenu(thePlayer, cmd, option)
 	if option == 'menu' then
 		triggerClientEvent(thePlayer, thisResName..":openMenu", thePlayer, scriptVersion)
 	elseif option == 'loadfiles' then
-		local files = getFilesInFolderRecursively(false, "files")
+		local files = getFilesInFolderRecursively(nil, "files")
 		local files2 = {}
 		for _, file in pairs(files) do
 			files2[file] = true
+			outputChatBox(" - ".. file, thePlayer, 187,187,187)
 		end
+		outputChatBox("Found "..#files.." files inside the files folder", thePlayer, 25,255,25)
 		triggerClientEvent(thePlayer, thisResName..":loadFileListFromServer", thePlayer, files2)
 	end
 end
@@ -310,7 +313,11 @@ function requestEncryptFile(filePaths, secretKey)
 			return outputChatBox("File is empty: "..fn, client, 255,25,25)
 		end
 		outputChatBox("Compiling '"..fn.."'..", client, 75,255,75)
-		fetchRemote(COMPILE_URL, compileCallback, {content, true, fn, client})
+		fetchRemote(COMPILE_URL, {
+			queueName='nandocrypt_comp',
+			method="POST",
+			postData=content,
+		}, compileCallback, {fn, client})
 	end
 end
 addEventHandler(thisResName..":requestEncryptFile", resourceRoot, requestEncryptFile, false)

@@ -239,7 +239,7 @@ local function getFilesInFolderRecursively(parentPath, folderName)
 	for _, fileOrFolder in pairs(pathListDir(parentFolder) or {}) do
 		local thisPath = parentFolder.."/"..fileOrFolder
 		if pathIsFile(thisPath) then
-			if not (fileOrFolder == '.keep') then
+			if fileOrFolder ~= '.keep' then
 				files[#files+1] = thisPath
 			end
 		elseif pathIsDirectory(thisPath) then
